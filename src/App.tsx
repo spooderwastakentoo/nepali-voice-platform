@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,39 +19,49 @@ import PoliticianDetail from "@/pages/PoliticianDetail";
 import Submit from "@/pages/Submit";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
+// Create a client
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/statements" element={<Statements />} />
-                <Route path="/statements/:id" element={<StatementDetail />} />
-                <Route path="/promises" element={<Promises />} />
-                <Route path="/promises/:id" element={<PromiseDetail />} />
-                <Route path="/politicians" element={<Politicians />} />
-                <Route path="/politicians/:id" element={<PoliticianDetail />} />
-                <Route path="/submit" element={<Submit />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <main className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/statements" element={<Statements />} />
+                    <Route path="/statements/:id" element={<StatementDetail />} />
+                    <Route path="/promises" element={<Promises />} />
+                    <Route path="/promises/:id" element={<PromiseDetail />} />
+                    <Route path="/politicians" element={<Politicians />} />
+                    <Route path="/politicians/:id" element={<PoliticianDetail />} />
+                    <Route path="/submit" element={
+                      <ProtectedRoute>
+                        <Submit />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <Footer />
+              </div>
+            </BrowserRouter>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;
