@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
 
 const categories = [
   'Economy',
@@ -26,7 +25,7 @@ const categories = [
 ];
 
 interface FormData {
-  type: 'claim' | 'promise' | 'politician';
+  type: 'statement' | 'promise' | 'politician';
   text: string;
   date: string;
   speaker: string;
@@ -40,7 +39,7 @@ const Submit = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
-    type: 'claim',
+    type: 'statement',
     text: '',
     date: '',
     speaker: '',
@@ -104,6 +103,16 @@ const Submit = () => {
         .split('\n')
         .map(link => link.trim())
         .filter(link => link.length > 0);
+      
+      console.log('Submitting data:', {
+        type: formData.type,
+        content: formData.text,
+        date: formData.date,
+        speaker: formData.speaker,
+        category: formData.category || null,
+        source_links: sourceLinks.length > 0 ? sourceLinks : null,
+        notes: formData.notes || null
+      });
       
       // Insert into submissions table
       const { data, error } = await supabase
@@ -197,14 +206,14 @@ const Submit = () => {
                 <div className="flex items-center">
                   <input
                     type="radio"
-                    id="claim"
+                    id="statement"
                     name="type"
-                    value="claim"
-                    checked={formData.type === 'claim'}
-                    onChange={() => setFormData(prev => ({ ...prev, type: 'claim' }))}
+                    value="statement"
+                    checked={formData.type === 'statement'}
+                    onChange={() => setFormData(prev => ({ ...prev, type: 'statement' }))}
                     className="mr-2"
                   />
-                  <Label htmlFor="claim" className="cursor-pointer">Statement/Claim</Label>
+                  <Label htmlFor="statement" className="cursor-pointer">Statement/Claim</Label>
                 </div>
                 <div className="flex items-center">
                   <input

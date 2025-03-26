@@ -49,6 +49,8 @@ export function useRole() {
   // Function to publish a submission to the appropriate live content table
   const publishSubmission = async (submissionId: string, targetTable: 'politicians' | 'statements' | 'promises') => {
     try {
+      console.log(`Publishing submission ${submissionId} to ${targetTable} table`);
+      
       // Call the database function to publish the submission
       const { data, error } = await supabase.rpc('publish_submission', {
         submission_id: submissionId,
@@ -60,6 +62,7 @@ export function useRole() {
         throw error;
       }
       
+      console.log('Publish successful, new record ID:', data);
       return { success: true, id: data };
     } catch (error: any) {
       console.error('Error publishing submission:', error);
