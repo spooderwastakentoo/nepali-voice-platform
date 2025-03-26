@@ -46,15 +46,17 @@ export function useRole() {
   const isUser = (): boolean => role === 'user';
   const hasRole = (requiredRole: UserRole): boolean => role === requiredRole;
 
-  // New function to publish a submission
+  // Function to publish a submission to the appropriate live content table
   const publishSubmission = async (submissionId: string, targetTable: 'politicians' | 'statements' | 'promises') => {
     try {
+      // Call the database function to publish the submission
       const { data, error } = await supabase.rpc('publish_submission', {
         submission_id: submissionId,
         target_table: targetTable
       });
       
       if (error) {
+        console.error('Error in publish_submission RPC call:', error);
         throw error;
       }
       

@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const categories = [
   'Economy',
@@ -23,7 +26,7 @@ const categories = [
 ];
 
 interface FormData {
-  type: 'claim' | 'promise';
+  type: 'claim' | 'promise' | 'politician';
   text: string;
   date: string;
   speaker: string;
@@ -35,6 +38,7 @@ interface FormData {
 
 const Submit = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     type: 'claim',
     text: '',
@@ -79,24 +83,63 @@ const Submit = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit content.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
-    // Simulate API request
-    setTimeout(() => {
-      console.log('Form submitted:', formData);
-      setIsSubmitting(false);
-      setIsSubmitted(true);
+    try {
+      // Parse sources into an array
+      const sourceLinks = formData.sources
+        .split('\n')
+        .map(link => link.trim())
+        .filter(link => link.length > 0);
       
+      // Insert into submissions table
+      const { data, error } = await supabase
+        .from('submissions')
+        .insert({
+          type: formData.type,
+          content: formData.text,
+          date: formData.date,
+          speaker: formData.speaker,
+          category: formData.category || null,
+          source_links: sourceLinks.length > 0 ? sourceLinks : null,
+          notes: formData.notes || null,
+          user_id: user.id
+        })
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log('Submission successful:', data);
+      setIsSubmitted(true);
       toast({
         title: "Submission received",
         description: "Thank you for your contribution to NepFacto!",
       });
-    }, 1000);
+    } catch (error: any) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Submission Error",
+        description: error.message || "Failed to submit your content. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -112,7 +155,20 @@ const Submit = () => {
               Your contribution helps keep our database accurate and up-to-date. Our team will review your submission shortly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => setIsSubmitted(false)}>
+              <Button onClick={() => {
+                setIsSubmitted(false);
+                // Reset form data
+                setFormData({
+                  type: 'claim',
+                  text: '',
+                  date: '',
+                  speaker: '',
+                  party: '',
+                  category: '',
+                  sources: '',
+                  notes: ''
+                });
+              }}>
                 Submit Another
               </Button>
               <Button variant="outline" asChild>
@@ -137,7 +193,7 @@ const Submit = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label>Submission Type</Label>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <div className="flex items-center">
                   <input
                     type="radio"
@@ -162,17 +218,36 @@ const Submit = () => {
                   />
                   <Label htmlFor="promise" className="cursor-pointer">Promise</Label>
                 </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="politician"
+                    name="type"
+                    value="politician"
+                    checked={formData.type === 'politician'}
+                    onChange={() => setFormData(prev => ({ ...prev, type: 'politician' }))}
+                    className="mr-2"
+                  />
+                  <Label htmlFor="politician" className="cursor-pointer">Politician</Label>
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="text" className="required">Text</Label>
+              <Label htmlFor="text" className="required">
+                {formData.type === 'politician' ? 'Name' : formData.type === 'promise' ? 'Promise Text' : 'Statement Text'}
+              </Label>
               <Textarea
                 id="text"
                 name="text"
                 value={formData.text}
                 onChange={handleChange}
-                placeholder="Enter the exact statement or promise..."
+                placeholder={formData.type === 'politician' 
+                  ? "Enter politician's full name..." 
+                  : formData.type === 'promise' 
+                    ? "Enter the exact promise..."
+                    : "Enter the exact statement..."
+                }
                 className={errors.text ? "border-destructive" : ""}
                 required
               />
@@ -180,7 +255,9 @@ const Submit = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="date" className="required">Date</Label>
+              <Label htmlFor="date" className="required">
+                {formData.type === 'politician' ? 'Date of Birth/Entry to Politics' : 'Date Made'}
+              </Label>
               <Input
                 id="date"
                 name="date"
@@ -194,19 +271,37 @@ const Submit = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="speaker" className="required">Speaker/Politician</Label>
-                <Input
-                  id="speaker"
-                  name="speaker"
-                  value={formData.speaker}
-                  onChange={handleChange}
-                  placeholder="Who made this statement/promise?"
-                  className={errors.speaker ? "border-destructive" : ""}
-                  required
-                />
-                {errors.speaker && <p className="text-sm text-destructive">{errors.speaker}</p>}
-              </div>
+              {formData.type !== 'politician' && (
+                <div className="space-y-2">
+                  <Label htmlFor="speaker" className="required">Speaker/Politician</Label>
+                  <Input
+                    id="speaker"
+                    name="speaker"
+                    value={formData.speaker}
+                    onChange={handleChange}
+                    placeholder="Who made this statement/promise?"
+                    className={errors.speaker ? "border-destructive" : ""}
+                    required
+                  />
+                  {errors.speaker && <p className="text-sm text-destructive">{errors.speaker}</p>}
+                </div>
+              )}
+
+              {formData.type === 'politician' && (
+                <div className="space-y-2">
+                  <Label htmlFor="speaker" className="required">Position/Title</Label>
+                  <Input
+                    id="speaker"
+                    name="speaker"
+                    value={formData.speaker}
+                    onChange={handleChange}
+                    placeholder="Current position/title"
+                    className={errors.speaker ? "border-destructive" : ""}
+                    required
+                  />
+                  {errors.speaker && <p className="text-sm text-destructive">{errors.speaker}</p>}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="party">Political Party</Label>
@@ -265,7 +360,12 @@ const Submit = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : "Submit"}
             </Button>
           </form>
         </CardContent>
