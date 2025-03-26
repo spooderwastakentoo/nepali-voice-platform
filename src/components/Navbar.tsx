@@ -1,11 +1,14 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -13,6 +16,16 @@ const Navbar = () => {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const handleLogin = () => {
+    closeMenu();
+    navigate('/auth');
+  };
+
+  const handleLogout = async () => {
+    closeMenu();
+    await signOut();
   };
 
   return (
@@ -23,13 +36,37 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex space-x-6">
-          <NavLink to="/" onClick={closeMenu}>Home</NavLink>
-          <NavLink to="/statements" onClick={closeMenu}>Statements</NavLink>
-          <NavLink to="/promises" onClick={closeMenu}>Promises</NavLink>
-          <NavLink to="/politicians" onClick={closeMenu}>Politicians</NavLink>
-          <NavLink to="/submit" onClick={closeMenu}>Submit</NavLink>
-          <NavLink to="/about" onClick={closeMenu}>About</NavLink>
+        <div className="hidden md:flex md:justify-between md:w-full">
+          <div className="flex space-x-6">
+            <NavLink to="/" onClick={closeMenu}>Home</NavLink>
+            <NavLink to="/statements" onClick={closeMenu}>Statements</NavLink>
+            <NavLink to="/promises" onClick={closeMenu}>Promises</NavLink>
+            <NavLink to="/politicians" onClick={closeMenu}>Politicians</NavLink>
+            <NavLink to="/submit" onClick={closeMenu}>Submit</NavLink>
+            <NavLink to="/about" onClick={closeMenu}>About</NavLink>
+          </div>
+          
+          <div>
+            {user ? (
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2"
+                onClick={handleLogout}
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </Button>
+            ) : (
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2"
+                onClick={handleLogin}
+              >
+                <LogIn size={16} />
+                <span>Login</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Mobile Navigation Toggle */}
@@ -50,6 +87,27 @@ const Navbar = () => {
             <NavLink to="/politicians" onClick={closeMenu}>Politicians</NavLink>
             <NavLink to="/submit" onClick={closeMenu}>Submit</NavLink>
             <NavLink to="/about" onClick={closeMenu}>About</NavLink>
+            <div className="border-t border-gray-200 pt-2 mt-2">
+              {user ? (
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center gap-2 w-full justify-start px-0"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </Button>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center gap-2 w-full justify-start px-0"
+                  onClick={handleLogin}
+                >
+                  <LogIn size={16} />
+                  <span>Login</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}
