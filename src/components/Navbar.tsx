@@ -1,13 +1,15 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRole } from '@/hooks/useRole';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin } = useRole();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -43,6 +45,12 @@ const Navbar = () => {
             <NavLink to="/promises" onClick={closeMenu}>Promises</NavLink>
             <NavLink to="/politicians" onClick={closeMenu}>Politicians</NavLink>
             <NavLink to="/submit" onClick={closeMenu}>Submit</NavLink>
+            {isAdmin() && (
+              <NavLink to="/admin" onClick={closeMenu} className="flex items-center">
+                <ShieldCheck size={16} className="mr-1" />
+                Admin
+              </NavLink>
+            )}
             <NavLink to="/about" onClick={closeMenu}>About</NavLink>
           </div>
           
@@ -86,6 +94,12 @@ const Navbar = () => {
             <NavLink to="/promises" onClick={closeMenu}>Promises</NavLink>
             <NavLink to="/politicians" onClick={closeMenu}>Politicians</NavLink>
             <NavLink to="/submit" onClick={closeMenu}>Submit</NavLink>
+            {isAdmin() && (
+              <NavLink to="/admin" onClick={closeMenu} className="flex items-center">
+                <ShieldCheck size={16} className="mr-1" />
+                Admin
+              </NavLink>
+            )}
             <NavLink to="/about" onClick={closeMenu}>About</NavLink>
             <div className="border-t border-gray-200 pt-2 mt-2">
               {user ? (
@@ -119,13 +133,14 @@ interface NavLinkProps {
   to: string;
   children: React.ReactNode;
   onClick?: () => void;
+  className?: string;
 }
 
-const NavLink = ({ to, children, onClick }: NavLinkProps) => {
+const NavLink = ({ to, children, onClick, className = '' }: NavLinkProps) => {
   return (
     <Link 
       to={to} 
-      className="text-gray-700 hover:text-primary font-medium transition-colors"
+      className={`text-gray-700 hover:text-primary font-medium transition-colors ${className}`}
       onClick={onClick}
     >
       {children}

@@ -20,6 +20,7 @@ import Submit from "@/pages/Submit";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Admin from "@/pages/Admin";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -48,6 +49,11 @@ const App = () => {
                     <Route path="/submit" element={
                       <ProtectedRoute>
                         <Submit />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/admin" element={
+                      <ProtectedRoute requiredRole="admin">
+                        <Admin />
                       </ProtectedRoute>
                     } />
                     <Route path="/auth" element={<Auth />} />
