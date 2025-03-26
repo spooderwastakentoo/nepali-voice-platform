@@ -46,11 +46,31 @@ export function useRole() {
   const isUser = (): boolean => role === 'user';
   const hasRole = (requiredRole: UserRole): boolean => role === requiredRole;
 
+  // New function to publish a submission
+  const publishSubmission = async (submissionId: string, targetTable: 'politicians' | 'statements' | 'promises') => {
+    try {
+      const { data, error } = await supabase.rpc('publish_submission', {
+        submission_id: submissionId,
+        target_table: targetTable
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { success: true, id: data };
+    } catch (error: any) {
+      console.error('Error publishing submission:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   return {
     role,
     loading,
     isAdmin,
     isUser,
-    hasRole
+    hasRole,
+    publishSubmission
   };
 }

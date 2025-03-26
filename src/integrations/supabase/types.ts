@@ -86,6 +86,33 @@ export type Database = {
           },
         ]
       }
+      politicians: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          id: string
+          name: string
+          party: string | null
+          province: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          party?: string | null
+          province?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          party?: string | null
+          province?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -109,6 +136,108 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      promises: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          date: string | null
+          description: string | null
+          id: string
+          politician_id: string | null
+          sources: string[] | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date?: string | null
+          description?: string | null
+          id?: string
+          politician_id?: string | null
+          sources?: string[] | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date?: string | null
+          description?: string | null
+          id?: string
+          politician_id?: string | null
+          sources?: string[] | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promises_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promises_politician_id_fkey"
+            columns: ["politician_id"]
+            isOneToOne: false
+            referencedRelation: "politicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      statements: {
+        Row: {
+          content: string
+          context: string | null
+          created_at: string | null
+          created_by: string | null
+          date: string
+          id: string
+          politician_id: string | null
+          sources: string[] | null
+        }
+        Insert: {
+          content: string
+          context?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date: string
+          id?: string
+          politician_id?: string | null
+          sources?: string[] | null
+        }
+        Update: {
+          content?: string
+          context?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          id?: string
+          politician_id?: string | null
+          sources?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "statements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statements_politician_id_fkey"
+            columns: ["politician_id"]
+            isOneToOne: false
+            referencedRelation: "politicians"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submissions: {
         Row: {
@@ -168,7 +297,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      publish_submission: {
+        Args: {
+          submission_id: string
+          target_table: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
